@@ -1,11 +1,17 @@
 ﻿@page "/counter"
 @using BlazorDIExamples.Services
+@using Blazored.LocalStorage
+@using Blazored.SessionStorage
 
 
 <h1>Hello, Counter Page Explorer!</h1>
 
 Refreshed @currTime
 <br />
+<p>Local Storage: @localStorageString</p>
+<hr />
+<p>Session Storage: @sessionString</p>
+<hr />
 <p>@Singleton.Id</p>
 <hr />
 <p>@Scoped.Id</p>
@@ -34,18 +40,25 @@ Refreshed @currTime
     [Inject] public TransientService Transient { get; set; }
     [Inject] public SingletonService Singleton { get; set; }
     [Inject] public IServiceProvider SvcProvider { get; set; }
+    [Inject] public ISessionStorageService sessionStorage { get; set; }
+    [Inject] public ILocalStorageService localStorage { get; set; }
 
+    private string sessionString = DateTime.Now.ToString("HH:mm:ss.fff");
     private string currTime = DateTime.Now.ToString("HH:mm:ss.fff");
+    private string localStorageString = DateTime.Now.ToString("HH:mm:ss.fff");
 
     private async Task RunStateHasChanged()
     {
+        localStorageString = await localStorage.GetItemAsync<string>("name") ?? "";
+        sessionString = await sessionStorage.GetItemAsync<string>("name");
         currTime = DateTime.Now.ToString("HH:mm:ss.fff");
         StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        // sessionString = await sessionStorage.GetItemAsync<string>("name");
+        sessionString = await sessionStorage.GetItemAsync<string>("name");
+        localStorageString = await localStorage.GetItemAsync<string>("name") ?? "";
     }
 
     private async Task RefreshServices()

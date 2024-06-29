@@ -1,5 +1,7 @@
 ﻿@page "/"
 @using BlazorDIExamples.Services
+@using Blazored.LocalStorage
+@using Blazored.SessionStorage
 
 <PageTitle>Home</PageTitle>
 
@@ -7,6 +9,10 @@
 
 Refreshed @currTime
 <br />
+<p>Local Storage: @localStorageString</p>
+<hr />
+<p>Session Storage: @sessionString</p>
+<hr />
 <p>@Singleton.Id</p>
 <hr />
 <p>@Scoped.Id</p>
@@ -22,14 +28,17 @@ Refreshed @currTime
 <br />
 <br />
 <br />
-<div class="row">
-    <div class="col border-1">
-        <MyComponent Title="Left Side Component" />
-    </div>
-    <div class="col border-1">
-        <MyComponent Title="Right Side Component" />
-    </div>
-</div> 
+@if (initialized)
+{
+    <div class="row">
+        <div class="col border-1">
+            <MyComponent Title="Left Side Component" />
+        </div>
+        <div class="col border-1">
+            <MyComponent Title="Right Side Component" />
+        </div>
+    </div> 
+}
 
 @code {
     [Parameter] public string Title { get; set; }
@@ -37,15 +46,40 @@ Refreshed @currTime
     [Inject] public TransientService Transient { get; set; }
     [Inject] public SingletonService Singleton { get; set; }
     [Inject] public IServiceProvider SvcProvider { get; set; }
+    [Inject] public ISessionStorageService sessionStorage { get; set; }
+    [Inject] public ILocalStorageService localStorage { get; set; }
 
     private string currTime = DateTime.Now.ToString("HH:mm:ss.fff");
+    private string sessionString = DateTime.Now.ToString("HH:mm:ss.fff");
+    private string localStorageString = DateTime.Now.ToString("HH:mm:ss.fff");
+    private bool initialized = false;
 
     private async Task RunStateHasChanged()
     {
+        localStorageString = await localStorage.GetItemAsync<string>("name") ?? "";
+        sessionString = await sessionStorage.GetItemAsync<string>("name");
         currTime = DateTime.Now.ToString("HH:mm:ss.fff");
         StateHasChanged();
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        sessionString = await sessionStorage.GetItemAsync<string>("name");
+        if (string.IsNullOrEmpty(sessionString))
+        {
+            sessionString = DateTime.Now.ToString("HH:mm:ss.fff");
+            await sessionStorage.SetItemAsync("name", sessionString);
+        }
+
+        localStorageString = await localStorage.GetItemAsync<string>("name") ?? "";
+        if (string.IsNullOrEmpty(localStorageString))
+        {
+            localStorageString = DateTime.Now.ToString("HH:mm:ss.fff");
+            await localStorage.SetItemAsync("name", localStorageString);
+        }
+
+        initialized = true;
+    }
   
     private async Task RefreshServices()
     {
