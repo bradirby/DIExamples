@@ -1,0 +1,46 @@
+﻿@using BlazorDIExamples.Services
+@Title 
+
+Refreshed @currTime
+<br />
+<p>@Singleton.Id</p>
+<hr />
+<p>@Scoped.Id</p>
+<hr />
+<p>@Transient.Id</p>
+<hr />
+
+<button class="btn btn-primary p-2" @onclick=RunStateHasChanged>Run State Has Changed </button>
+<button class="btn btn-primary p-2" @onclick=RefreshServices>Refresh All Services</button>
+
+<br />
+<br />
+<br />
+
+@code {
+    [Parameter] public string Title { get; set; }
+    [Inject] public ScopedService Scoped { get; set; }
+    [Inject] public TransientService Transient { get; set; }
+    [Inject] public SingletonService Singleton { get; set; }
+    [Inject] public IServiceProvider SvcProvider { get; set; }
+
+    private string currTime = DateTime.Now.ToString("HH:mm:ss.fff");
+
+    private async Task RunStateHasChanged()
+    {
+        currTime = DateTime.Now.ToString("HH:mm:ss.fff");
+        StateHasChanged();
+    }
+
+
+    private async Task RefreshServices()
+    {
+        currTime = DateTime.Now.ToString("HH:mm:ss.fff");
+        Transient = SvcProvider.GetRequiredService<TransientService>();
+        Scoped = SvcProvider.GetRequiredService<ScopedService>();
+        Singleton = SvcProvider.GetRequiredService<SingletonService>();
+        StateHasChanged();
+    }
+
+
+}
